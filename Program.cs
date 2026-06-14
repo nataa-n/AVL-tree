@@ -1,4 +1,4 @@
-﻿public class Node<T>
+public class Node<T>
 {
     public T Value; // data that node stores
     public Node<T> Left; // reference to the left child
@@ -17,6 +17,17 @@
 public class AVLTree<T> where T : IComparable<T>
 {
     private Node<T> root; 
+    private bool changed; // set by Insert/Delete to report success
+
+    // empty tree
+    public AVLTree() { }
+
+    public AVLTree(IEnumerable<T> values)
+    {
+        foreach (T v in values)
+            Insert(v);
+    }
+
     private int Height(Node<T> node)
     {
         if (node == null)
@@ -64,9 +75,11 @@ public class AVLTree<T> where T : IComparable<T>
     }
     
     // public entry point
-    public void Insert(T value)
+    public bool Insert(T value)
     {
+        changed = false;
         root = Insert(root, value);
+        return changed;
     }
 
     // inserts value into the subtree rooted at 'node'
@@ -74,9 +87,10 @@ public class AVLTree<T> where T : IComparable<T>
     private Node<T> Insert(Node<T> node, T value)
     {
         // normal BST insertion
-        if (node == null)
+        if (node == null){
+            changed = true;
             return new Node<T>(value); // create the node here
-
+        }
         if (value.CompareTo(node.Value) < 0)
             node.Left = Insert(node.Left, value);
         else if (value.CompareTo(node.Value) > 0)
@@ -139,9 +153,11 @@ public class AVLTree<T> where T : IComparable<T>
         return current;
     }
 
-    public void Delete(T value)
+    public bool Delete(T value)
     {
+        changed = false;
         root = Delete(root, value);
+        return changed;
     }
 
     // deletes value from the subtree rooted at 'node'
@@ -159,6 +175,7 @@ public class AVLTree<T> where T : IComparable<T>
         else
         {
             // found the node to delete
+            changed = true;
             if (node.Left == null) // leaf or only a right child
                 return node.Right;
             else if (node.Right == null) // only a left child
@@ -223,14 +240,27 @@ public class AVLTree<T> where T : IComparable<T>
 
     public bool IsBalanced()
     {
-        return IsBalanced(root);
+        return IsBalanced(root) != -1;
     }
 
-    private bool IsBalanced(Node<T> node)
+    // returns height of the subtree or -1 if anything is wrong below
+    private int IsBalanced(Node<T> node)
     {
-        if (node == null) return true;
-        int bf = BalanceFactor(node);
-        if (bf < -1 || bf > 1) return false;
-        return IsBalanced(node.Left) && IsBalanced(node.Right);
+        if (node == null) return 0;
+
+        int left = IsBalanced(node.Left);
+        if (left == -1) return -1; // problem somewhere down left
+
+        int right = IsBalanced(node.Right);
+        if (right == -1) return -1; // problem somewhere down right
+
+        if (left - right < -1 || left - right > 1) // actual structure of the tree is unbalanced
+            return -1;
+
+        int trueHeight = 1 + Math.Max(left, right);
+        if (node.Height != trueHeight) // the label stored is wrong
+            return -1;
+
+        return trueHeight;
     }
 }
