@@ -106,5 +106,72 @@ public class Tests
         tree.Insert(i);
         Assert.True(tree.GetHeight() < 2 * Math.Log(n, 2));
     }
+    
+    [Fact]
+    public void Insert_Duplicate_ReturnsFalse_AndTreeUnchanged()
+    {
+        var tree = MakeSampleTree();
+        Assert.False(tree.Insert(30)); // 30 is already there
+        Assert.Equal(7, tree.InOrder().Count); // the number of 7 values is unchanged
+        Assert.True(tree.IsBalanced());
+    }
 
+    [Fact]
+    public void Insert_NewValue_ReturnsTrue()
+    {
+        var tree = MakeSampleTree();
+        Assert.True(tree.Insert(60));
+        Assert.True(tree.Search(60));
+    }
+
+    [Fact]
+    public void Delete_MissingValue_ReturnsFalse_AndTreeUnchanged()
+    {
+        var tree = MakeSampleTree();
+        Assert.False(tree.Delete(99)); // 99 is not in our tree
+        Assert.Equal(7, tree.InOrder().Count);
+        Assert.True(tree.IsBalanced());
+    }
+
+    [Fact]
+    public void Delete_PresentValue_ReturnsTrue()
+    {
+        var tree = MakeSampleTree();
+        Assert.True(tree.Delete(25));
+    }
+
+    [Fact]
+    public void Delete_FromEmptyTree_ReturnsFalse()
+    {
+        var tree = new AVLTree<int>();
+        Assert.False(tree.Delete(5));
+        Assert.True(tree.IsBalanced()); // empty tree is balanced
+    }
+
+    [Fact]
+    public void EmptyTree_SearchAndInOrder_BehaveCorrectly()
+    {
+        var tree = new AVLTree<int>();
+        Assert.False(tree.Search(1));
+        Assert.Empty(tree.InOrder());
+        Assert.Equal(0, tree.GetHeight());
+    }
+
+    [Fact]
+    public void Constructor_FromIEnumerable_BuildsCorrectTree()
+    {
+        var tree = new AVLTree<int>(new[] { 5, 3, 8, 1, 4 });
+        Assert.Equal(new List<int> { 1, 3, 4, 5, 8 }, tree.InOrder());
+        Assert.True(tree.IsBalanced());
+    }
+
+    [Fact]
+    public void DeleteEverything_LeavesEmptyTree()
+    {
+        var tree = MakeSampleTree();
+        foreach (int v in new[] { 30, 20, 40, 10, 25, 35, 50 })
+            Assert.True(tree.Delete(v));
+        Assert.Empty(tree.InOrder());
+        Assert.True(tree.IsBalanced());
+    }
 }
